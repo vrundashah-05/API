@@ -1,0 +1,71 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weather</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      /* Gradient Background */
+      background: linear-gradient(135deg, #a7f6a8, #66a6ff);
+    }
+
+    #weather {
+      background: rgba(42, 96, 48, 0.85);
+      padding: 20px 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(54, 4, 95, 0.2);
+      text-align: center;
+      width: 280px;
+      animation: fadeIn 1.2s ease-in-out;
+      color: white;
+      font-weight: bold;
+      font-size:20px;
+    }
+
+    #weather h3 {
+      margin-top: 0;
+      font-size: 22px;
+      color:white;
+      font-family: cursive;
+    }
+
+   
+  </style>
+</head>
+<body>
+  <div id="weather">Loading weather…</div>
+
+  <script>
+    fetch("https://api.open-meteo.com/v1/forecast?latitude=28.61&longitude=77.23&current_weather=true&timezone=auto")
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        display(data);
+      })
+      .catch(err => {
+        document.getElementById("weather").innerText = "Error fetching weather: " + err;
+      });
+
+    function display(weather) {
+      const cw = weather.current_weather;
+      const div = document.getElementById("weather");
+
+      div.innerHTML = `
+        <h3>Current Weather</h3>
+        Temperature: ${cw.temperature} °C<br>
+        Wind Speed: ${cw.windspeed} km/h<br>
+        Time: ${cw.time}
+      `;
+    }
+  </script>
+</body>
+</html>
