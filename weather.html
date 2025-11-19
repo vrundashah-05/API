@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Weather</title>
+  <title>Weather Finder</title>
   <style>
     body {
       margin: 0;
@@ -13,59 +13,96 @@
       display: flex;
       justify-content: center;
       align-items: center;
-
-      /* Gradient Background */
       background: linear-gradient(135deg, #a7f6a8, #66a6ff);
     }
 
-    #weather {
+    #weather-container {
       background: rgba(42, 96, 48, 0.85);
-      padding: 20px 30px;
+      padding: 25px 35px;
       border-radius: 15px;
       box-shadow: 0 4px 20px rgba(54, 4, 95, 0.2);
       text-align: center;
-      width: 280px;
-      animation: fadeIn 1.2s ease-in-out;
+      width: 320px;
       color: white;
       font-weight: bold;
-      font-size:20px;
     }
 
-    #weather h3 {
+    #weather-container h3 {
       margin-top: 0;
       font-size: 22px;
-      color:white;
       font-family: cursive;
     }
 
-   
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+      border: none;
+      width: 90%;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
   </style>
 </head>
 <body>
-  <div id="weather">Loading weather…</div>
+  <div id="weather-container">
+    <h3>Weather Finder</h3>
+    <input type="text" id="city" placeholder="Enter City">
+    <input type="text" id="country" placeholder="Enter Country">
+    <button onclick="getWeather()">Get Weather</button>
+    <div id="weather">Enter city and country above</div>
+  </div>
 
   <script>
-    fetch("https://api.open-meteo.com/v1/forecast?latitude=28.61&longitude=77.23&current_weather=true&timezone=auto")
-      .then(res => res.json())
-      .then(data => {
-        console.log(data);
-        display(data);
-      })
-      .catch(err => {
-        document.getElementById("weather").innerText = "Error fetching weather: " + err;
-      });
+    async function getWeather() {
+      const city = document.getElementById("city").value;
+      const country = document.getElementById("country").value;
+      const weatherDiv = document.getElementById("weather");
 
-    function display(weather) {
-      const cw = weather.current_weather;
-      const div = document.getElementById("weather");
+      if (!city || !country) {
+        weatherDiv.innerText = "Please enter both city and country";
+        return;
+      }
 
-      div.innerHTML = `
-        <h3>Current Weather</h3>
-        Temperature: ${cw.temperature} °C<br>
-        Wind Speed: ${cw.windspeed} km/h<br>
-        Time: ${cw.time}
-      `;
+      try {
+        // Geocoding API to get latitude and longitude
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=1&language=en&format=json`);
+        const geoData = await geoRes.json();
+        if (!geoData.results || geoData.results.length === 0) {
+          weatherDiv.innerText = "Location not found!";
+          return;
+        }
+
+        const location = geoData.results[0];
+        const lat = location.latitude;
+        const lon = location.longitude;
+
+        // Fetch weather
+        const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`);
+        const weatherData = await weatherRes.json();
+
+        const cw = weatherData.current_weather;
+        weatherDiv.innerHTML = `
+          <h3>Current Weather in ${location.name}, ${location.country}</h3>
+          Temperature: ${cw.temperature} °C<br>
+          Wind Speed: ${cw.windspeed} km/h<br>
+          Time: ${cw.time}
+        `;
+      } catch (err) {
+        weatherDiv.innerText = "Error fetching weather: " + err;
+      }
     }
   </script>
 </body>
 </html>
+
+      
